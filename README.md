@@ -1,6 +1,6 @@
-# Token Vesting Smart Contract Development Guide
+# Token Vesting Smart Contract Development
 
-This guide walks you through the process of building a token vesting smart contract system using Hardhat, Solidity, and deploying it to Rootstock Testnet.
+Building a token vesting smart contract system using Hardhat, Solidity, and deploying it to Rootstock Testnet.
 
 ## Prerequisites
 
