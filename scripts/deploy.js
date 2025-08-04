@@ -4,9 +4,8 @@ async function main() {
   const [deployer] = await hre.ethers.getSigners();
   console.log(`Deploying contracts with the account: ${deployer.address}`);
 
-  const initialTokenSupply = hre.ethers.parseEther("1000000000"); // 1 Billion tokens
-
-  // Deploy MyToken
+  // Deploy MyToken with 1 billion tokens (18 decimals)
+  const initialTokenSupply = hre.ethers.parseEther("1000000000"); // 1B tokens with 18 decimals
   const MyToken = await hre.ethers.getContractFactory("MyToken");
   const myToken = await MyToken.deploy(initialTokenSupply);
   await myToken.waitForDeployment();
@@ -18,30 +17,34 @@ async function main() {
   await tokenVesting.waitForDeployment();
   console.log(`TokenVesting deployed to: ${tokenVesting.target}`);
 
-  // Transfer some tokens to the vesting contract
-  const tokensToFundVestingContract = hre.ethers.parseEther("100000000"); // 100 million tokens
-  await myToken.transfer(tokenVesting.target, tokensToFundVestingContract);
-  console.log(`Transferred ${hre.ethers.formatEther(tokensToFundVestingContract)} RVT to TokenVesting contract`);
+  // Transfer tokens to the vesting contract for future schedules
+  const tokensForVesting = hre.ethers.parseEther("100000000"); // 100M tokens
+  await myToken.transfer(tokenVesting.target, tokensForVesting);
+  console.log(`Transferred ${hre.ethers.formatEther(tokensForVesting)} tokens to TokenVesting contract`);
 
-  // Example of creating a vesting schedule
-  const beneficiaryAddress = deployer.address; // Using deployer as beneficiary for example
-  const currentTime = Math.floor(Date.now() / 1000);
-  const cliffTime = currentTime + (30 * 24 * 60 * 60); // 30 days cliff
-  const startTime = cliffTime;
-  const duration = (2 * 365 * 24 * 60 * 60); // 2 years duration
-  const vestingAmount = hre.ethers.parseEther("1000000"); // 1 million RVT
+  // Example vesting schedule: 1M tokens over 2 years with 6-month cliff
+  const beneficiaryAddress = deployer.address;
+  const now = Math.floor(Date.now() / 1000);
+  const sixMonths = 180 * 24 * 60 * 60;
+  const twoYears = 2 * 365 * 24 * 60 * 60;
+  const vestingAmount = hre.ethers.parseEther("1000000"); // 1M tokens
 
   await tokenVesting.createVestingSchedule(
     beneficiaryAddress,
-    cliffTime,
-    startTime,
-    duration,
-    vestingAmount
+    now + sixMonths, // cliff
+    now,             // start
+    twoYears,        // duration
+    vestingAmount    // amount
   );
-  console.log(`Created a vesting schedule for ${beneficiaryAddress} with ${hre.ethers.formatEther(vestingAmount)} RVT.`);
+  console.log(`Created vesting schedule for ${beneficiaryAddress} with ${hre.ethers.formatEther(vestingAmount)} tokens`);
+
+  console.log("\nDeployment Summary:");
+  console.log("==================");
+  console.log(`MyToken: ${myToken.target}`);
+  console.log(`TokenVesting: ${tokenVesting.target}`);
 }
 
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
-}); 
+});
